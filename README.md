@@ -17,7 +17,7 @@ Authors: Huw Hamer Powell <huw@huwpowell.com>
 3) Change the first three variables according to your configuration. Or maintain a .ini file with the three variables. Can be created by the script if neccessary
 4) Run this program at login or from your $HOME  when your network is ready
 
-a mntNFS.desktop file is provided (Copy to $HOME/Desktop)
+a mntFTP.desktop file is provided (Copy to $HOME/Desktop)
 
 need to use sudo.. so run the skeleton script mntFTP which will call te script (mntFTP.sh) using sudo... Or from the CLI or Gnome Desktop
 
