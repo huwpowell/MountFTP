@@ -1,0 +1,16 @@
+#!/bin/sh
+
+PROTO=`zenity --list --radiolist --width 400 --height=190\
+  	--title="Choose the File Server type" \
+  	--column="sel" --column="Protocol" --column="Description" \
+    	TRUE SMB "SAMBA/Windows/SMB/CIFS" \
+    	FALSE NFS "Network File System" \
+    	FALSE FTP "File Transfer Protocol"
+`
+case $? in
+         0)     echo "$PROTO selected.";;
+         1)	echo "Canceled.. Nothing selected.";exit;;
+        -1)     echo "An unexpected error has occurred.";exit;;
+esac
+
+exec "./mnt$PROTO"
