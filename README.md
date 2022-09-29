@@ -12,7 +12,7 @@ UBUNTU needs arp-scan (apt install arp-scan)
 
 Authors: Huw Hamer Powell <huw@huwpowell.com>
 
-1) Install arp-scan (sudo dnf arp-scan)
+1) Install arp-scan (sudo dnf install arp-scan)
 2)If you want to use the full functionality of nice dialog boxes install yad . otherwise we default to zenity *not so nice but it works)
 3) Change the first three variables according to your configuration. Or maintain a .ini file with the three variables. Can be created by the script if neccessary
 4) Run this program at login or from your $HOME  when your network is ready
