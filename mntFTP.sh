@@ -42,10 +42,10 @@ NC_PORT=21						# Which port to use to connect during scanning
 TIMEOUTDELAY=5						# timeout for dialogs and messages. (in seconds)
 YADTIMEOUTDELAY=$(($TIMEOUTDELAY*4))			# Extra time for completing the initial form and where necessary
 
-######## !!!!!!!!!!!!!! DON'T MODIFY ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING !!!!!!!!!!!!!! ##########
-######## !!!!!!!!!!!!!! DON'T MODIFY ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING !!!!!!!!!!!!!! ##########
+######## !! DON'T MODIFY ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING !!!!!!! ##########
+######## !! DON'T MODIFY ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING !!!!!!! ##########
 #
-#---------------------------------------------------------------- Functions -----------------------------------------------------------------------------
+#------------- Functions --------
 
 #------ yad test -------------- Not used in this script.. It is Just a testbed
 
@@ -558,9 +558,55 @@ function select-server() {
 	}
 #---------------- end select-server -------------
 
-export -f select-mounted select-server find-ftp-servers 
+#-------- select-mountpoint ------
+function select-mountpoint ()
+{
+while [ ! -d "$FTP_MOUNT_POINT" ]; do				# Does the mount point root exist?
+		Q_OUT=$(zenity --list \
+			--title="Mount Point Not defined" \
+			--text "Select the root mount point" \
+			--radiolist \
+			--column "sel" \
+			--column "Mount Point" \
+			TRUE "/media" \
+			FALSE "/mnt" \
+			FALSE "Other"
+			)
+		if [ -z $Q_OUT ]; then				# Most likely cancel was selected or dialog closed
+			Q_OUT="Other"				# set to Other and manually collect input
+		fi
+	
+	NEW_MOUNT_POINT="$Q_OUT"
 
-# --------------------------------------------------------------------End functions------------------------------------------------------------------------
+	if [ "$NEW_MOUNT_POINT" = "Other" ]; then
+
+		NEW_MOUNT_POINT=$(zenity --forms --width=500 --height=200 --title="Mount Point Not defined" \
+				--text="\nSelect the root mount point\n\nSuggested choices are '/media or /mnt'" \
+				--add-entry="Root Mount Point - "$FTP_MOUNT_POINT \
+				--cancel-label="Exit" \
+				--ok-label="Select This Mount Point" \
+			)
+	fi
+
+	if [ -n "$NEW_MOUNT_POINT" ]; then
+		FTP_MOUNT_POINT="$NEW_MOUNT_POINT"			# Get the user input
+	else
+		exit							# Exit whole process if no input
+	fi
+done
+
+if [ ! -z $FTP_PNAME ] ; then
+	MOUNT_POINT_ROOT=$FTP_MOUNT_POINT"/$FTP_PNAME"	# Append the calling name if set as $2
+	if [ ! -d $MOUNT_POINT_ROOT ]; then
+		mkdir $MOUNT_POINT_ROOT				# make the mountpoint directory if required.
+	fi
+fi
+}
+#---------- END select-mountpoint --------
+
+export -f select-mounted select-server find-ftp-servers select-mountpoint
+
+# ------------------ End functions -------------------------------
 
 # -- Proceed with Main()
 
@@ -631,16 +677,11 @@ if [ -f $FTP_PNAME.last ]; then
 	. $FTP_PNAME.last				# load last sucessful mounted options if they exist (Overwrites .ini)
 fi
 
-if [ ! -z $FTP_PNAME ] ; then
-	MOUNT_POINT_ROOT=$FTP_MOUNT_POINT"/$FTP_PNAME"	# Append the calling name if set as $2
-	if [ ! -d $MOUNT_POINT_ROOT ]; then
-		mkdir $MOUNT_POINT_ROOT				# make the mountpoint directory if required.
-	fi
-fi
+select-mountpoint					# Decide where we are going to mount
 
 which yad >>/dev/null 2>&1					# see if yad is installed
 if [ $? = "0" ]; then
-	USEYAD=true 						# Use yad if we can (Maybe suggest to install later ..note to self.. TBD)
+	USEYAD=true 						# Use yad if we can
 	export GDK_BACKEND=x11					# needed to make yad work correctly
 
 	if [ -f $FTP_PNAME.png ]; then
@@ -855,8 +896,8 @@ if [[ "$IS_MOUNTED" ]] ; then
 		unmount "$MOUNT_POINT"							# Attempt to unmount volume
 
 		if ! $UNMOUNT_ERR  ; then
-			if [ -f "$0.last" ]; then
-				rm -f "$0.last"						# Unmounted so delete last mounted vars temp file (restart next time with .ini file)
+			if [ -f "$FTP_PNAME.last" ]; then
+				rm -f "$FTP_PNAME.last"						# Unmounted so delete last mounted vars temp file (restart next time with .ini file)
 			fi
 		else									# unmount failed
 			exit 1
