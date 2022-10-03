@@ -31,12 +31,12 @@
 #		   Also, run it on logoff to umount any mounted servers (Will remove the mount point directory). Does not matter if you don't , Just cleaner if you do :)
 #
 #------ Edit these four DEFAULT options to match your system. Alternatinvely create the $0.ini file and edit that instead and save the .ini file for next time
-FTP_IP="10.0.1.200"					# e.g. "192.168.1.100"
-FTP_USER="`hostname`"					# The User id ON THE FTP Server .. else Guest/anonymous (defaults to the currect hostname)
-FTP_PASSWORD="88888888"					# Password for the Above FTP Server User, prefix special characters, e.g.
+_IP="10.0.1.200"					# e.g. "192.168.1.100"
+_USER="`hostname`"					# The User id ON THE FTP Server .. else Guest/anonymous (defaults to the currect hostname)
+_PASSWORD="88888888"					# Password for the Above FTP Server User, prefix special characters, e.g.
 
 #------
-FTP_MOUNT_POINT=/media					# Base folder for mounting (/media recommended but could be /mnt or other choice)
+_MOUNT_POINT=/media					# Base folder for mounting (/media recommended but could be /mnt or other choice)
 
 NC_PORT=21						# Which port to use to connect during scanning
 TIMEOUTDELAY=5						# timeout for dialogs and messages. (in seconds)
@@ -91,16 +91,16 @@ else
 	VAREXTN="$1"					# Take the extension from the arguments
 fi
 
-echo "# This file contains the variables to match your system and is included into the main script at runtime">$FTP_PNAME.$VAREXTN	# create the file
-echo "# if this file does not exist you will get the option to create it from the defaults in the main script">>$FTP_PNAME.$VAREXTN
-echo "">>$FTP_PNAME.$VAREXTN
+echo "# This file contains the variables to match your system and is included into the main script at runtime">$_PNAME.$VAREXTN	# create the file
+echo "# if this file does not exist you will get the option to create it from the defaults in the main script">>$_PNAME.$VAREXTN
+echo "">>$_PNAME.$VAREXTN
 
-echo 'FTP_IP="'"$FTP_IP"'"		# e.g. 192.168.1.100' >>$FTP_PNAME.$VAREXTN
-echo 'FTP_USER="'"$FTP_USER"'"		# The User id ON THE FTP server' >>$FTP_PNAME.$VAREXTN
-echo 'FTP_PASSWORD="'"$FTP_PASSWORD"'"	# Password for the Above FTP Server User' >>$FTP_PNAME.$VAREXTN
-echo 'FTP_MOUNT_POINT="'"$FTP_MOUNT_POINT"'"	# Base folder for mounting (/media recommended but could be /mnt or other choice)' >>$FTP_PNAME.$VAREXTN
-echo "">>$FTP_PNAME.$VAREXTN
-echo "#-- Created `date` by `whoami` ----">>$FTP_PNAME.$VAREXTN
+echo '_IP="'"$_IP"'"		# e.g. 192.168.1.100' >>$_PNAME.$VAREXTN
+echo '_USER="'"$_USER"'"		# The User id ON THE FTP server' >>$_PNAME.$VAREXTN
+echo '_PASSWORD="'"$_PASSWORD"'"	# Password for the Above FTP Server User' >>$_PNAME.$VAREXTN
+echo '_MOUNT_POINT="'"$_MOUNT_POINT"'"	# Base folder for mounting (/media recommended but could be /mnt or other choice)' >>$_PNAME.$VAREXTN
+echo "">>$_PNAME.$VAREXTN
+echo "#-- Created `date` by `whoami` ----">>$_PNAME.$VAREXTN
 } # NOTE : The user name is not saved (commented out) to enable the hostname to be set next time around. Uncomment the line in the .ini file if a specific user name is required
 
 #-------------END save-vars-----------
@@ -173,15 +173,15 @@ function set-netbiosname() {
 	S_IP=$(echo $1 | cut -d":" -s -f1)	# get the IP address from the volume string
 	if [ -z "$S_IP" ]; then S_IP="$1"; fi	# if that didnt work we where given the IP address anyway
 
-	FTP_NETBIOSNAME=$(echo "$FTP_SERVERS_AND_NAMES" \
+	_NETBIOSNAME=$(echo "$_SERVERS_AND_NAMES" \
 		|grep -iw $S_IP \
 		|awk '{$1 = ""; print $0;}' \
 		|sed 's/\t//' \
 		)		#1. Find the NETBIOS name "|sed 's/\t//' removes any tab characters, awk '{$2 = ""; print $0;}' print everything EXCEPT the first field *Dropping the IP address from the output 
-	FTP_LASTSERVERONLINE=true
-	if [ -z "$FTP_NETBIOSNAME" ]; then
-		FTP_NETBIOSNAME="<span foreground='red'>*OFFLINE*</span>"  				# If name not found, it is probably offline
-		FTP_LASTSERVERONLINE=false								# Show it as offline
+	_LASTSERVERONLINE=true
+	if [ -z "$_NETBIOSNAME" ]; then
+		_NETBIOSNAME="<span foreground='red'>*OFFLINE*</span>"  				# If name not found, it is probably offline
+		_LASTSERVERONLINE=false								# Show it as offline
 	fi
 }
 # -------------- END set-netbiosname -------
@@ -247,28 +247,28 @@ function select-mounted() {
 function edit-file() {
 # Edit a support file
 # Inputs $1=The file extension $2=A narrative/Instructions message
-FTP_FILE="$FTP_PNAME.$1"
+_FILE="$_PNAME.$1"
 
 DOsave="N"				# Assume No Save
 
 	if [ -n "$2" ]; then				# Display a Narrative/Instructions Dialog
 		zenity --info --width=350 --timeout=$YADTIMEOUTDELAY \
-		--title="Edit : $FTP_FILE" \
+		--title="Edit : $_FILE" \
 		--text="$2"
 	fi
 
-	if [ -f $FTP_FILE ]			# read the contents of the file if it exists
+	if [ -f $_FILE ]			# read the contents of the file if it exists
 	then
-		FTP_FILE_CONTENTS=$(cat $FTP_FILE)
+		_FILE_CONTENTS=$(cat $_FILE)
 	else
-		FTP_FILE_CONTENTS=""
+		_FILE_CONTENTS=""
 	fi
 
 EDIT_TXT=$(zenity --text-info --width=350 --height=500 \
-	--title="Edit : $FTP_FILE" \
+	--title="Edit : $_FILE" \
 	--editable \
-	--checkbox="Save $FTP_FILE?" \
-	 <<<$FTP_FILE_CONTENTS \
+	--checkbox="Save $_FILE?" \
+	 <<<$_FILE_CONTENTS \
 	)
 
 	case $? in			# $? is the zenity return code
@@ -279,39 +279,39 @@ EDIT_TXT=$(zenity --text-info --width=350 --height=500 \
 					# Exit with three variables set
 					# DOsave = "Y" or "N"
 					# EDIT_TXT = whatever was returned from the edit *"" if Cancelled*
-					# FTP_FILE = Name of the file to save
+					# _FILE = Name of the file to save
 }
 # ------------ END edit-file ---------
 #------------- edit-subnets --------------------
 function edit-subnets() {
 
-	FTP_NARRATIVE="<span foreground='blue'><b><big>Enter subnets in the format xxx.xxx.xxx.xxx/mm\nor xxx.xxx.xxx.xxx or xxx.xxx.xxx\n\n</big>ie 192.168.1.0/24\nor 172.162.2.0\nor 10.0.3</b></span>"
-	edit-file subnets "$FTP_NARRATIVE"
+	_NARRATIVE="<span foreground='blue'><b><big>Enter subnets in the format xxx.xxx.xxx.xxx/mm\nor xxx.xxx.xxx.xxx or xxx.xxx.xxx\n\n</big>ie 192.168.1.0/24\nor 172.162.2.0\nor 10.0.3</b></span>"
+	edit-file subnets "$_NARRATIVE"
 
 if [ $DOsave = "Y" ]; then
-	FTP_FILE_OUT=$(echo "$EDIT_TXT" \
+	_FILE_OUT=$(echo "$EDIT_TXT" \
 	|grep -o -E '([0-9]{1,3}\.){2}[0-9]{1,3}' \
 	|awk -v mask=".0/24" 'BEGIN{OFS=""} {print $1,mask ;} ' \
 	|sort -u \
 	)
-	echo "$FTP_FILE_OUT"| sed -e '/^$/d' >$FTP_FILE	# Save any valid input to $FTP_FILE ignoring blanks
+	echo "$_FILE_OUT"| sed -e '/^$/d' >$_FILE	# Save any valid input to $_FILE ignoring blanks
 fi
 }
 # ------------ END edit-subnets ---------
 #------------- edit-servers --------------------
 function edit-servers() {
 
-	FTP_NARRATIVE="<span foreground='blue'><b><big>Enter servers in the format xxx.xxx.xxx.xxx,name\n\n</big>ie 192.168.1.106,Nas1\nor 172.162.2.6	Server2</b>\n\nSeparate the two fields with <b>ONE</b> comma (,) or <b>ONE</b> TAB\n\nPut each server on a separate line</span>"
-	edit-file servers "$FTP_NARRATIVE"
+	_NARRATIVE="<span foreground='blue'><b><big>Enter servers in the format xxx.xxx.xxx.xxx,name\n\n</big>ie 192.168.1.106,Nas1\nor 172.162.2.6	Server2</b>\n\nSeparate the two fields with <b>ONE</b> comma (,) or <b>ONE</b> TAB\n\nPut each server on a separate line</span>"
+	edit-file servers "$_NARRATIVE"
 
 	if [ $DOsave = "Y" ]; then
-		FTP_FILE_OUT=$(echo -n "$EDIT_TXT" \
+		_FILE_OUT=$(echo -n "$EDIT_TXT" \
 		|grep -E '\b((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\.)){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\b' \
 		|awk 'BEGIN{FS="[,\t]";OFS=""} {print $1,",",$2,"\n" ;} ' \
 		|sort -u -t "," -k1,1 \
 		)				# grep extracts only Valid IP addresses and discards invalid
 
-	echo "$FTP_FILE_OUT"| sed -e '/^$/d' >$FTP_FILE	# Save any valid input to $FTP_FILE ignoring blanks
+	echo "$_FILE_OUT"| sed -e '/^$/d' >$_FILE	# Save any valid input to $_FILE ignoring blanks
 
 	fi
 }
@@ -322,15 +322,15 @@ function scan-subnets() {
 
 # look for subnets file
 
-	if [ -f $FTP_PNAME.subnets ]; then
-		SCAN_SUBNETS=$(cat $FTP_PNAME.subnets |grep -v $FTP_SUBNET|sort -u ) # remove any current entry for this subnet and select only unique lines (No duplicates)
+	if [ -f $_PNAME.subnets ]; then
+		SCAN_SUBNETS=$(cat $_PNAME.subnets |grep -v $_SUBNET|sort -u ) # remove any current entry for this subnet and select only unique lines (No duplicates)
 	fi
 
 	if [ -n "$SCAN_SUBNETS" ]; then
-		if [ -z "$FTP_SERVERS_AND_NAMES" ]; then
+		if [ -z "$_SERVERS_AND_NAMES" ]; then
 			SCAN_KNOWN_SERVERS="None"
 		else
-			SCAN_KNOWN_SERVERS=$FTP_SERVERS_AND_NAMES
+			SCAN_KNOWN_SERVERS=$_SERVERS_AND_NAMES
 		fi
 		SCAN_SUBNETS=$(awk 'BEGIN{FS="\n";OFS=""} {print "FALSE\n",$1 ;} '<<<$SCAN_SUBNETS)
 
@@ -339,7 +339,7 @@ function scan-subnets() {
 			--checklist \
 			--multiple \
 			--title="Subnets to Scan" \
-			--text="<span><b><big><big>Contents of $FTP_PNAME.subnets\n\n</big>Select Any that you want to Scan\nthen Proceed to scan selected Subnets</big></b></span>\n\nWe can already see these servers\n$SCAN_KNOWN_SERVERS\n" \
+			--text="<span><b><big><big>Contents of $_PNAME.subnets\n\n</big>Select Any that you want to Scan\nthen Proceed to scan selected Subnets</big></b></span>\n\nWe can already see these servers\n$SCAN_KNOWN_SERVERS\n" \
 			--columns=2 \
 			--column="Sel" \
 			--column="Subnet" \
@@ -367,7 +367,7 @@ function scan-subnets() {
 			"nmap -oG $Stmp_out --append-output -sn -PS2049 $S_SN" 	# find out what machines are available on the other subnets
 			done <<<$SCAN_SUBNETS
 	
-			FTP_SUBNET_IPS=$(cat "$Stmp_out" \
+			_SUBNET_IPS=$(cat "$Stmp_out" \
 			|grep "Status: Up" \
 			|grep -o -E '([0-9]{1,3}\.){3}[0-9]{1,3}' \
 			|sort -u
@@ -375,15 +375,15 @@ function scan-subnets() {
 			
 			rm -f $Stmp_out			# delete temp file after reading content
 
-			FTP_SUBNET_SERVERS=""
+			_SUBNET_SERVERS=""
 
-			for S_IP in $(echo "$FTP_SUBNET_IPS")
+			for S_IP in $(echo "$_SUBNET_IPS")
 			do
 				echo "# Scanning ... $S_IP"			# Tell zenity what we are doing 
-				FTP_TMP=$(nc -zvw3 $S_IP $NC_PORT 2>&1)
+				_TMP=$(nc -zvw3 $S_IP $NC_PORT 2>&1)
 				if [ $? = "0" ]				# if nc connected sucessfully add this IP as an FTP server
 				then
-					FTP_SUBNET_SERVERS=$(echo "$FTP_SUBNET_SERVERS\n$S_IP")
+					_SUBNET_SERVERS=$(echo "$_SUBNET_SERVERS\n$S_IP")
 				fi
 			done> >(zenity --progress --pulsate  --width=250 --auto-close --no-cancel \
 				--title="Scanning for FTP servers" \
@@ -391,25 +391,25 @@ function scan-subnets() {
 				--percentage=0)					# Track progress on screen
 
 
-			if [ -n "$FTP_SUBNET_SERVERS" ]; then
+			if [ -n "$_SUBNET_SERVERS" ]; then
 
-				FTP_SUBNET_IPS=$(echo "$FTP_SUBNET_SERVERS" \
+				_SUBNET_IPS=$(echo "$_SUBNET_SERVERS" \
 				|awk -v sname="Remote Scanned" 'BEGIN{FS=" ";OFS=""} {print $1,",",sname,"\n" ;} ' \
 				)
 
-				FTP_SERVERS_FILE=""
-				if [ -f $FTP_PNAME.servers ]; then # Get all from the existing .servers file
-					FTP_SERVERS_FILE=$(cat $FTP_PNAME.servers)
+				_SERVERS_FILE=""
+				if [ -f $_PNAME.servers ]; then # Get all from the existing .servers file
+					_SERVERS_FILE=$(cat $_PNAME.servers)
  				fi
-				FTP_NEW_SERVERS=$(echo -e "$FTP_SERVERS_FILE\n$FTP_SUBNET_IPS"|sort -u -t "," -k1,1) # remove any duplicates				
-				echo "$FTP_NEW_SERVERS"|sed -e '/^$/d'|sort -u -t "," -k1,1 > $FTP_PNAME.servers	# Append IPS found to Servers for later processing, Ignore blank lines
+				_NEW_SERVERS=$(echo -e "$_SERVERS_FILE\n$_SUBNET_IPS"|sort -u -t "," -k1,1) # remove any duplicates				
+				echo "$_NEW_SERVERS"|sed -e '/^$/d'|sort -u -t "," -k1,1 > $_PNAME.servers	# Append IPS found to Servers for later processing, Ignore blank lines
 	
 			fi
 		fi
 	else
 		zenity	--question --no-wrap \
 			--title="No subnets found" \
-			--text="No subnets found in $FTP_PNAME.subnets\n\nEdit the $FTP_PNAME.subnets file\nand try again?"
+			--text="No subnets found in $_PNAME.subnets\n\nEdit the $_PNAME.subnets file\nand try again?"
 		if [ $? = "0" ]
 		then
 			edit-subnets				# edit the subnets file
@@ -425,19 +425,19 @@ function find-ftp-servers() {
 # look for subnets file
 # if it doesnt't exist make one and add our subnet to it. ie. 192.168.1.0/24
 
-FTP_SUBNET=$(ip route | grep -E '([0-9]{1,3}\.){3}[0-9]{1,3}'/ |cut -d" " -s -f1 |grep -v 169.254 )
+_SUBNET=$(ip route | grep -E '([0-9]{1,3}\.){3}[0-9]{1,3}'/ |cut -d" " -s -f1 |grep -v 169.254 )
 
-if [ -f $FTP_PNAME.subnets ]; then
-	FTP_CURRENT_SUBNETS=$(cat $FTP_PNAME.subnets |grep -v $FTP_SUBNET ) # remove any current entry for this subnet
+if [ -f $_PNAME.subnets ]; then
+	_CURRENT_SUBNETS=$(cat $_PNAME.subnets |grep -v $_SUBNET ) # remove any current entry for this subnet
 fi
 
-echo -e "$FTP_SUBNET\n$FTP_CURRENT_SUBNETS" > $FTP_PNAME.subnets 	# recreate .subnets Add this subnet at the top
+echo -e "$_SUBNET\n$_CURRENT_SUBNETS" > $_PNAME.subnets 	# recreate .subnets Add this subnet at the top
 
 # Find the available Servers on the subnets
-	show-progress "Initializing" "Finding Servers on $FTP_SUBNET" \
+	show-progress "Initializing" "Finding Servers on $_SUBNET" \
 	"arp-scan --localnet"	# find out what FTP servers are available on the current subnet
 	
-	FTP_LIVE_IPS=$(echo "$SP_RTN" \
+	_LIVE_IPS=$(echo "$SP_RTN" \
 		|grep -E '([0-9]{1,3}\.){3}[0-9]{1,3}' \
 		|grep -v "Interface" \
 		|grep -v "DUP" \
@@ -445,24 +445,24 @@ echo -e "$FTP_SUBNET\n$FTP_CURRENT_SUBNETS" > $FTP_PNAME.subnets 	# recreate .su
 		|sort
 		)	
 
-		if [ -f $FTP_PNAME.servers ]; then	# Add the remote servers in .servers file
-			FTP_LIVE_IPS1=$(echo "$FTP_LIVE_IPS")
-			FTP_LIVE_IPS2=$(cat "$FTP_PNAME.servers")
-			FTP_LIVE_IPS=$(echo "$FTP_LIVE_IPS2$FTP_LIVE_IPS1"|sort -u -t "," -k1,1) # remove any duplicates
+		if [ -f $_PNAME.servers ]; then	# Add the remote servers in .servers file
+			_LIVE_IPS1=$(echo "$_LIVE_IPS")
+			_LIVE_IPS2=$(cat "$_PNAME.servers")
+			_LIVE_IPS=$(echo "$_LIVE_IPS2$_LIVE_IPS1"|sort -u -t "," -k1,1) # remove any duplicates
  		fi							# Decide which of the live machines is an FTP server
 #	(							# Zenity progress this loop
 
-	for S_IP in $(echo "$FTP_LIVE_IPS" | awk 'BEGIN{FS=",";OFS=""} {print $1 ;} '  )
+	for S_IP in $(echo "$_LIVE_IPS" | awk 'BEGIN{FS=",";OFS=""} {print $1 ;} '  )
 	do
 		echo "# Scanning ... $S_IP"			# Tell zenity what we are doing 
 
 		SP_RTN=$(ping -c 1 -W 2 $S_IP)			# See if the IP is alive
 
 		if [ $? = "0" ]; then
-			FTP_TMP=$(nc -zvw3 $S_IP $NC_PORT 2>&1)
+			_TMP=$(nc -zvw3 $S_IP $NC_PORT 2>&1)
 			if [ $? = "0" ]				# if nc connected sucessfully add this IP as an FTP server
 			then
-			FTP_SERVERS=$(echo -e "$S_IP\n$FTP_SERVERS")
+			_SERVERS=$(echo -e "$S_IP\n$_SERVERS")
 
 			fi
 				
@@ -477,35 +477,35 @@ echo -e "$FTP_SUBNET\n$FTP_CURRENT_SUBNETS" > $FTP_PNAME.subnets 	# recreate .su
 
 
 #Find the names of the Servers found above
-	FTP_SERVERS_AND_NAMES=""						# Clear the variables
+	_SERVERS_AND_NAMES=""						# Clear the variables
 
-	for S_IP in $(echo "$FTP_SERVERS" | sed -e '/^$/d' )			# Find the name of all servers | sed -e '/^$/d' ignores blank lines
+	for S_IP in $(echo "$_SERVERS" | sed -e '/^$/d' )			# Find the name of all servers | sed -e '/^$/d' ignores blank lines
 	do									
 
 # Find the machine name/ID
 	
-		S_NAME=$(echo "$FTP_LIVE_IPS" |grep -w $S_IP |cut -d"," -s -f2)	#1. Find the machine name
-		FTP_SERVERS_AND_NAMES=$(echo -e "$FTP_SERVERS_AND_NAMES\n$S_IP $S_NAME")	#2. Append the IP address and NETBIOS name to the list in $FTP_SERVERS_AND_NAMES
+		S_NAME=$(echo "$_LIVE_IPS" |grep -w $S_IP |cut -d"," -s -f2)	#1. Find the machine name
+		_SERVERS_AND_NAMES=$(echo -e "$_SERVERS_AND_NAMES\n$S_IP $S_NAME")	#2. Append the IP address and NETBIOS name to the list in $_SERVERS_AND_NAMES
 	done
 }
 # --------------- END find-ftp-servers --------------
 #---------------- select-server -------------
 function select-server() {
 
-	set-netbiosname $FTP_IP		# Get the NETBIOS name of the last used/selected server into FTP_NETBIOSNAME
-	YAD_DLG_TEXT=$(echo "<span><big><b><big>Select the FTP Server</big>\nPress Escape to use the last mounted volume</b></big>\n\n" "$FTP_IP" "\n$FTP_NETBIOSNAME" "</span>")
+	set-netbiosname $_IP		# Get the NETBIOS name of the last used/selected server into _NETBIOSNAME
+	YAD_DLG_TEXT=$(echo "<span><big><b><big>Select the FTP Server</big>\nPress Escape to use the last mounted volume</b></big>\n\n" "$_IP" "\n$_NETBIOSNAME" "</span>")
 
-	SELECT_SRV=$(echo -e "TRUE\n$FTP_IP\n$FTP_NETBIOSNAME")	# Put the last used server and share at the top of the list
+	SELECT_SRV=$(echo -e "TRUE\n$_IP\n$_NETBIOSNAME")	# Put the last used server and share at the top of the list
 
-	for S_IP in $(echo "$FTP_SERVERS" | sed -e '/^$/d' )				# Find all availableFTP servers | sed -e '/^$/d' ignores blank lines
+	for S_IP in $(echo "$_SERVERS" | sed -e '/^$/d' )				# Find all availableFTP servers | sed -e '/^$/d' ignores blank lines
 	do										# Parse a list of IP addresses and NETBIOS names (2 columns IP and NETBIOS name)
-		set-netbiosname $S_IP							# Get the netbios name into FTP_NETBIOSNAME
+		set-netbiosname $S_IP							# Get the netbios name into _NETBIOSNAME
 
 #....
 		CHECK_SRV=""							# Start with a blank list
-		if [ -n "$FTP_SERVERS_AND_NAMES" ]; then			# if we found any servers
-			CHECK_SRV=$(echo "$FTP_SERVERS_AND_NAMES" \
-			| grep -iwv $FTP_IP \
+		if [ -n "$_SERVERS_AND_NAMES" ]; then			# if we found any servers
+			CHECK_SRV=$(echo "$_SERVERS_AND_NAMES" \
+			| grep -iwv $_IP \
 			| sed -e '/^$/d' \
 			| awk 'BEGIN{FS=" "} {OFS=" "} {print "FALSE"}{print $1}{$1 = ""; print $0;} ' \
 			) 		# select only and ALL lines except the last mounted Server IP
@@ -561,7 +561,7 @@ function select-server() {
 #-------- select-mountpoint ------
 function select-mountpoint ()
 {
-while [ ! -d "$FTP_MOUNT_POINT" ]; do				# Does the mount point root exist?
+while [ ! -d "$_MOUNT_POINT" ]; do				# Does the mount point root exist?
 		Q_OUT=$(zenity --list \
 			--title="Mount Point Not defined" \
 			--text "Select the root mount point" \
@@ -582,21 +582,21 @@ while [ ! -d "$FTP_MOUNT_POINT" ]; do				# Does the mount point root exist?
 
 		NEW_MOUNT_POINT=$(zenity --forms --width=500 --height=200 --title="Mount Point Not defined" \
 				--text="\nSelect the root mount point\n\nSuggested choices are '/media or /mnt'" \
-				--add-entry="Root Mount Point - "$FTP_MOUNT_POINT \
+				--add-entry="Root Mount Point - "$_MOUNT_POINT \
 				--cancel-label="Exit" \
 				--ok-label="Select This Mount Point" \
 			)
 	fi
 
 	if [ -n "$NEW_MOUNT_POINT" ]; then
-		FTP_MOUNT_POINT="$NEW_MOUNT_POINT"			# Get the user input
+		_MOUNT_POINT="$NEW_MOUNT_POINT"			# Get the user input
 	else
 		exit							# Exit whole process if no input
 	fi
 done
 
-if [ ! -z $FTP_PNAME ] ; then
-	MOUNT_POINT_ROOT=$FTP_MOUNT_POINT"/$FTP_PNAME"	# Append the calling name if set as $2
+if [ ! -z $_PNAME ] ; then
+	MOUNT_POINT_ROOT=$_MOUNT_POINT"/$_PNAME"	# Append the calling name if set as $2
 	if [ ! -d $MOUNT_POINT_ROOT ]; then
 		mkdir $MOUNT_POINT_ROOT				# make the mountpoint directory if required.
 	fi
@@ -664,17 +664,17 @@ fi
 
 #----- Read $1 and set the User and Group ID for the mount command
 # Since we have to run this scipt using sudo we need the actual user UID. This is set by the execution script that called us
-# The UID is passed as $arg1 i.e "./mntFTP $FTP_ID" (see the mntFTP script) comes as 'uid=nnnn gid=nnnn'
+# The UID is passed as $arg1 i.e "./mntFTP $_ID" (see the mntFTP script) comes as 'uid=nnnn gid=nnnn'
 # We need to use awk to add the commas into it to use as input to mount
-FTP_UID=$(awk 'BEGIN{FS=" ";OFS=""} {print $1,",",$2 ;} '  <<<$1)
-FTP_PNAME=$2						# Get the actual name of the calling user/script
+_UID=$(awk 'BEGIN{FS=" ";OFS=""} {print $1,",",$2 ;} '  <<<$1)
+_PNAME=$2						# Get the actual name of the calling user/script
 #
-if [ -f $FTP_PNAME.ini ]; then
-	. $FTP_PNAME.ini				# include the variables from the .ini file (Will orerwrite the above if $2.ini found)
+if [ -f $_PNAME.ini ]; then
+	. $_PNAME.ini				# include the variables from the .ini file (Will orerwrite the above if $2.ini found)
 fi
 
-if [ -f $FTP_PNAME.last ]; then						
-	. $FTP_PNAME.last				# load last sucessful mounted options if they exist (Overwrites .ini)
+if [ -f $_PNAME.last ]; then						
+	. $_PNAME.last				# load last sucessful mounted options if they exist (Overwrites .ini)
 fi
 
 select-mountpoint					# Decide where we are going to mount
@@ -684,8 +684,8 @@ if [ $? = "0" ]; then
 	USEYAD=true 						# Use yad if we can
 	export GDK_BACKEND=x11					# needed to make yad work correctly
 
-	if [ -f $FTP_PNAME.png ]; then
-		YAD_ICON=$FTP_PNAME.png 			# Use our Icon if we can ($0.png is an icon of a timecapsule
+	if [ -f $_PNAME.png ]; then
+		YAD_ICON=$_PNAME.png 			# Use our Icon if we can ($0.png is an icon of a timecapsule
 	       							# (Not required but just nice if we can)
 	else
 
@@ -715,7 +715,7 @@ fi
 	select-server				# Select a server and share from the selection list (Returns IP|NETBIOSNAME)
 
 		if [ -n "$SP_RTN" ]; then
-			IFS="|" read  FTP_IP FTP_NETBIOSNAME tTail<<< "$SP_RTN"  # tTail picks up any spare seperators
+			IFS="|" read  _IP _NETBIOSNAME tTail<<< "$SP_RTN"  # tTail picks up any spare seperators
 		fi
 #
 # Get user input to confirm default or selected values
@@ -725,9 +725,9 @@ do
 		if $USEYAD ; then						# Use zad if we can 
 # Format the server list for YAD dropdown list
 		CHECK_SRV=""							# Start with a blank list
-		if [ -n "$FTP_SERVERS_AND_NAMES" ]; then			# if we found any servers
-			CHECK_SRV=$(echo "$FTP_SERVERS_AND_NAMES" \
-			| grep -iwv $FTP_IP \
+		if [ -n "$_SERVERS_AND_NAMES" ]; then			# if we found any servers
+			CHECK_SRV=$(echo "$_SERVERS_AND_NAMES" \
+			| grep -iwv $_IP \
 			| sed -e '/^$/d' \
 			| awk 'BEGIN{FS=" "} {OFS=" "} {print "!" $1," - "}{$1 = ""; print $0;} ' \
 			) 		# select only and ALL lines except the last mounted Server IP
@@ -736,14 +736,14 @@ do
 					# the last mounted server. is added at the top of the list later
 					# sed -e '/^$/d' \ removes any blank lines
 					# Paste into one row delimted by '!' 
-		set-netbiosname $FTP_IP			# Get the NETBIOS name of the last used/selected server into FTP_NETBIOSNAME
- 		if ! $FTP_LASTSERVERONLINE ; then
-			FTP_NETBIOSNAME="**OFFLINE**"  			# Server is offline dont include the pango markup set by set-netbiosname
+		set-netbiosname $_IP			# Get the NETBIOS name of the last used/selected server into _NETBIOSNAME
+ 		if ! $_LASTSERVERONLINE ; then
+			_NETBIOSNAME="**OFFLINE**"  			# Server is offline dont include the pango markup set by set-netbiosname
 
 		fi
 
 # finally make the drop down list (Remember to consider that we changed the ' ' for '-' when we parse the result below	
-		SEL_AVAILABLE_SERVERS=$(echo $FTP_IP" - "$FTP_NETBIOSNAME$CHECK_SRV'!other' )
+		SEL_AVAILABLE_SERVERS=$(echo $_IP" - "$_NETBIOSNAME$CHECK_SRV'!other' )
 	# Add the last used server at the top, append "other" to allow input of a server not found above
 	# Replace the one space seperator (' ') with ' - ' (Make it pretty) like the awk paste OFS above
 
@@ -753,8 +753,8 @@ do
 				--title="FTP Server details" \
 				--text="\n<span><b><big><big>Enter the Server data</big>\n</big></b></span>\n" \
 				--field="IP Address of FTP Server ":CBE "$SEL_AVAILABLE_SERVERS" \
-				--field="User " "$FTP_USER" \
-				--field="Password ":H "$FTP_PASSWORD" \
+				--field="User " "$_USER" \
+				--field="Password ":H "$_PASSWORD" \
 				--field="\n<b>Select 'Ignore' to ignore any changes here and proceed to mount with default values\n \
 				\nOtherwise select 'Mount' to accept any changes made here</b>\n":LBL \
 				--field="":LBL \
@@ -764,9 +764,9 @@ do
 
 		SrvDetail=$(zenity --forms --width=500 --title="FTP Server details" --separator=","  \
 				--text="\nSelect Cancel or Timeout in $YADTIMEOUTDELAY Seconds will ignore any changes here and proceed to mount with default values\n" \
-				--add-entry="IP Address of FTP Server - "$FTP_IP \
-				--add-entry="User - "$FTP_USER \
-				--add-password="Password - "$FTP_PASSWORD \
+				--add-entry="IP Address of FTP Server - "$_IP \
+				--add-entry="User - "$_USER \
+				--add-password="Password - "$_PASSWORD \
 				--default-cancel \
 				--ok-label="Mount - This Server" \
 				--cancel-label="Ignore - Use Defaults" \
@@ -782,25 +782,25 @@ do
 		esac
 # got input.. validate it
 
-	IFS="," read  tFTP_IP tFTP_USER tFTP_PASSWORD tTail<<< "$SrvDetail" # tTail picks up any spare seperators
+	IFS="," read  t_IP t_USER t_PASSWORD tTail<<< "$SrvDetail" # tTail picks up any spare seperators
 
-	tFTP_IP="$tFTP_IP "					# Add a trailing space for the 'cut' commmand below
-	tFTP_IP=$(echo "$tFTP_IP" \
+	t_IP="$t_IP "					# Add a trailing space for the 'cut' commmand below
+	t_IP=$(echo "$t_IP" \
 		|cut -d" " -s -f1 \
 		|tr -d '[:space:]')				# Get the IP address ONLY from the input
 	
 	ENTRYerr=""					# Collect the blank field names 
-	if [ -z "$tFTP_IP" ]; then ENTRYerr="$ENTRYerr IP,"
+	if [ -z "$t_IP" ]; then ENTRYerr="$ENTRYerr IP,"
 	fi
-	if [ -z "$tFTP_USER" ]; then ENTRYerr="$ENTRYerr User ID,"
+	if [ -z "$t_USER" ]; then ENTRYerr="$ENTRYerr User ID,"
 	fi
-	if [ -z "$tFTP_PASSWORD" ]; then ENTRYerr="$ENTRYerr User ID,"
+	if [ -z "$t_PASSWORD" ]; then ENTRYerr="$ENTRYerr User ID,"
 	fi
 	if [ -z "$ENTRYerr" ]; then				# no fields are blank
 
-		if [[ "$FTP_IP" != "$tFTP_IP" ]] || \
-		[[ "$FTP_USER" != "$tFTP_USER" ]] || \
-		[[ "$FTP_PASSWORD" != "$tFTP_PASSWORD" ]] || \
+		if [[ "$_IP" != "$t_IP" ]] || \
+		[[ "$_USER" != "$t_USER" ]] || \
+		[[ "$_PASSWORD" != "$t_PASSWORD" ]] || \
 
 	       	[[ $FORCESAVEINI ]]\
 		; then				# If anything changed or user selected save defaults button
@@ -808,11 +808,11 @@ do
 			if $USEYAD ; then	# Use yad if we can
 				SP_RTN=$(yad --form  --separator="," --center --on-top --skip-taskbar --align=right --text-align=center --buttons-layout=spread --borders=25 \
 					--image=document-save \
-					--title="Save $FTP_PNAME.ini" \
+					--title="Save $_PNAME.ini" \
 					--text="\n<span><b><big><big>Your Server data Input</big></big></b></span>\n" \
-					--field="IP Address of FTP Server ":RO "$tFTP_IP" \
-					--field="User ID ":RO "$tFTP_USER" \
-					--field="Password ":RO "$tFTP_PASSWORD" \
+					--field="IP Address of FTP Server ":RO "$t_IP" \
+					--field="User ID ":RO "$t_USER" \
+					--field="Password ":RO "$t_PASSWORD" \
 					--field="\n\n<span><b><big>Do you want to save these values as defaults?</big></b></span>\n":LBL \
 					--field="":LBL \
 					--button="Dont save":1 --button="Save as Default":0 \
@@ -820,11 +820,11 @@ do
 				)
 			else
 				SP_RTN=$(zenity --question --no-wrap \
-					--title="Save $FTP_PNAME.ini" \
+					--title="Save $_PNAME.ini" \
 					--text="\n Your Server/Share data Input \n \
-						IP Address of FTP Server - "$tFTP_IP"    \n \
-						User ID - "$tFTP_USER"    \n \
-						Password - "$tFTP_PASSWORD"    \n \
+						IP Address of FTP Server - "$t_IP"    \n \
+						User ID - "$t_USER"    \n \
+						Password - "$t_PASSWORD"    \n \
 
 						\nDo you want to save these values as defaults?    " \
 					--default-cancel \
@@ -842,10 +842,10 @@ do
 
 		fi						# end check for any changes
 
-		IFS="," read  FTP_IP FTP_USER FTP_PASSWORD tTail<<< "$SrvDetail"  # tTail picks up any spare seperators
+		IFS="," read  _IP _USER _PASSWORD tTail<<< "$SrvDetail"  # tTail picks up any spare seperators
 
-		FTP_IP="$FTP_IP "					# Add a trailing space for the 'cut' commmand below
-		FTP_IP=$(echo "$FTP_IP" \
+		_IP="$_IP "					# Add a trailing space for the 'cut' commmand below
+		_IP=$(echo "$_IP" \
 		|cut -d" " -s -f1 \
 		|tr -d '[:space:]')					# Get the IP address only from the input (remember we exchanged the ' ' for '-' when we formatted the list
 	
@@ -863,7 +863,7 @@ do
 
 done
 
-MOUNTDIR=$(echo $FTP_IP)	# Use the server IP address as the mount point
+MOUNTDIR=$(echo $_IP)	# Use the server IP address as the mount point
 MOUNT_POINT="$MOUNT_POINT_ROOT/$MOUNTDIR"			# Where we are going to mount... no need to create the directory we, will do it as we go
 
 #Start Processing mount
@@ -874,7 +874,7 @@ if [[ "$IS_MOUNTED" ]] ; then
 
 		zenity 	--question --no-wrap \
 			--title="Volume Already in use" \
-			--text="$FTP_IP or something else is currently mounted at $MOUNT_POINT   \n\nDo you want to unmount and stop using it?" \
+			--text="$_IP or something else is currently mounted at $MOUNT_POINT   \n\nDo you want to unmount and stop using it?" \
 			--default-cancel \
 			--ok-label="Unmount" \
 			--cancel-label="Continue Using" \
@@ -896,8 +896,8 @@ if [[ "$IS_MOUNTED" ]] ; then
 		unmount "$MOUNT_POINT"							# Attempt to unmount volume
 
 		if ! $UNMOUNT_ERR  ; then
-			if [ -f "$FTP_PNAME.last" ]; then
-				rm -f "$FTP_PNAME.last"						# Unmounted so delete last mounted vars temp file (restart next time with .ini file)
+			if [ -f "$_PNAME.last" ]; then
+				rm -f "$_PNAME.last"						# Unmounted so delete last mounted vars temp file (restart next time with .ini file)
 			fi
 		else									# unmount failed
 			exit 1
@@ -920,8 +920,8 @@ else		# Not yet mounted so Proceed to attempt mounting
 			fi
 		fi
 # ---------- mount and trap any error message
-		MNT_CMD="curlftpfs '$FTP_IP' '$MOUNT_POINT' -o user=$FTP_USER:$FTP_PASSWORD,$FTP_UID,allow_other"
-		show-progress "Mounting" "Attempting to mount $FTP_IP" "$MNT_CMD"
+		MNT_CMD="curlftpfs '$_IP' '$MOUNT_POINT' -o user=$_USER:$_PASSWORD,$_UID,allow_other"
+		show-progress "Mounting" "Attempting to mount $_IP" "$MNT_CMD"
 
 		ERR=$(echo "$SP_RTN" | grep -v "Created symlink")	# Read any error message
 									# The "Created symlink" message comes up the first time
@@ -932,7 +932,7 @@ else		# Not yet mounted so Proceed to attempt mounting
 		if [ -z "$ERR" ] ; then
 			zenity	--info --no-wrap \
 				--title="Volume is Mounted" \
-				--text="Volume $FTP_IP is Mounted  \n\nProceed to use it at $MOUNT_POINT  \n\n.... Success!!" \
+				--text="Volume $_IP is Mounted  \n\nProceed to use it at $MOUNT_POINT  \n\n.... Success!!" \
 				--timeout=$TIMEOUTDELAY 
 
 		save-vars "last" 							# save the as the last Volume used
@@ -945,7 +945,7 @@ else		# Not yet mounted so Proceed to attempt mounting
 
 			zenity	--error --no-wrap \
 				--title="Volume is NOT Mounted" \
-				--text="Something went wrong!!...  \n\n $ERR \n\n Failed to mount FTP Server$FTP_IP at $MOUNT_POINT \ntry again  " \
+				--text="Something went wrong!!...  \n\n $ERR \n\n Failed to mount FTP Server$_IP at $MOUNT_POINT \ntry again  " \
 #				--timeout=$TIMEOUTDELAY
 
 			exit 1
