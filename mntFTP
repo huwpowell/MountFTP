@@ -1,12 +1,12 @@
-SMB_UID=$(id | awk  'BEGIN{FS="[ (]";OFS=" "}{print $1,$3}')
-#echo $SMB_UID
+_UID=$(id | awk  'BEGIN{FS="[ (]";OFS=" "}{print $1,$3}')
+#echo $_UID
 
 # setup for sudo to run a GUI program without errors
 xhost +		# Allow acces to X if required
 XDG_RUNTIME_DIR_SAVED=$XDG_RUNTIME_DIR
 XDG_RUNTIME_DIR=""
 
-sudo -E $0.sh "$SMB_UID" `basename "$0"`	# Translates to "sudo mntSMB.sh uid=1000 gid=1000 mntSMB"
+sudo -E $0.sh "$_UID" `basename "$0"`	# Translates to "sudo mntSMB.sh uid=1000 gid=1000 mntSMB"
 
 # Restore to previous state
 XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR_SAVED
