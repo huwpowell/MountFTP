@@ -319,7 +319,9 @@ function edit-servers() {
 #------------- scan-subnets --------------
 # We scan subnets with nmap. This is slower than arp-scan and could take 30-40 seconds per subnet
 function scan-subnets() {
-
+local M_PROCEED='no'						# Not yet scanned
+while [ "$M_PROCEED" ]					# Keep going until scan finished
+do
 # look for subnets file
 
 	if [ -f $_PNAME.subnets ]; then
@@ -349,9 +351,10 @@ function scan-subnets() {
 			<<< "$SCAN_SUBNETS"
 			)
 		if [ $? = "4" ]
-			then
-				edit-subnets				# edit the subnets file
-				scan-subnets				# call this function again to scan any new subnets
+		then
+			edit-subnets				# edit the subnets file
+		else
+			M_PROCEED=''				# OK to attempt scan
 		fi						# Falls though to selection below
 
 		if [ -n "$OUT" ]					# if anything was selected
@@ -413,10 +416,12 @@ function scan-subnets() {
 		if [ $? = "0" ]
 		then
 			edit-subnets				# edit the subnets file
-			scan-subnets				# call this function again to scan any new subnets
+		else
+			M_PROCEED=''				# Ignore and leave function
 		fi
 		
 	fi							# end scan subnets
+done
 }
 #------------- END scan-subnets--------------
 #------------- find-ftp-servers --------------
