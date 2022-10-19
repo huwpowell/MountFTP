@@ -366,8 +366,8 @@ do
 			Stmp_out=$(mktemp --tmpdir `basename $0`.XXXXXXX)	# Somewhere to store output
 
 			while IFS= read -r S_SN; do
-			show-progress "Scanning" "Finding Servers on $S_SN" \
-			"nmap -oG $Stmp_out --append-output -sn -PS2049 $S_SN" 	# find out what machines are available on the other subnets
+				show-progress "Scanning" "Finding Servers on $S_SN" \
+				"nmap -n -oG $Stmp_out --append-output -sn -PS$NC_PORT $S_SN" 	# find out what machines are available on the other subnets
 			done <<<$SCAN_SUBNETS
 	
 			_SUBNET_IPS=$(cat "$Stmp_out" \
@@ -383,7 +383,7 @@ do
 			for S_IP in $(echo "$_SUBNET_IPS")
 			do
 				echo "# Scanning ... $S_IP"			# Tell zenity what we are doing 
-				_TMP=$(nc -zvw3 $S_IP $NC_PORT 2>&1)
+				_TMP=$(nc -zw1 $S_IP $NC_PORT 2>&1)
 				if [ $? = "0" ]				# if nc connected sucessfully add this IP as an FTP server
 				then
 					_SUBNET_SERVERS=$(echo "$_SUBNET_SERVERS\n$S_IP")
@@ -464,7 +464,7 @@ echo -e "$_SUBNET\n$_CURRENT_SUBNETS" > $_PNAME.subnets 	# recreate .subnets Add
 		SP_RTN=$(ping -c 1 -W 2 $S_IP)			# See if the IP is alive
 
 		if [ $? = "0" ]; then
-			_TMP=$(nc -zvw3 $S_IP $NC_PORT 2>&1)
+			_TMP=$(nc -zw1 $S_IP $NC_PORT 2>&1)
 			if [ $? = "0" ]				# if nc connected sucessfully add this IP as an FTP server
 			then
 			_SERVERS=$(echo -e "$S_IP\n$_SERVERS")
@@ -621,7 +621,8 @@ export -f select-mounted select-server find-ftp-servers select-mountpoint
 # 1. arp-scan to allow the searching for, active machines (Potentially FTP servers)
 # 2. curlftpfs to mount FTP volumes
 # 3. nc to interact with FTP
-# 4. yad to give functional and usable dialog inputs
+# 4. nmap to scan other subnets
+# 5. yad to give functional and usable dialog inputs
 
 NOTINSTALLED_MSG=""						# Start with a blank message
 #1.. Look for curlftpfs
@@ -644,7 +645,13 @@ if [ $? != "0" ]; then
        	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"nc\n"		# indicate not installed		
 fi
 
-#4.. Look for yad
+#4.. Look for nmap
+which nmap >>/dev/null 2>&1					# see if netcat is installed
+if [ $? != "0" ]; then
+       	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"nmap\n"		# indicate not installed		
+fi
+
+#5.. Look for yad
 
 which yad >>/dev/null 2>&1					# see if yad is installed
 if [ $? != "0" ]; then
@@ -657,7 +664,7 @@ if [ $? != "0" ]; then
 fi
 
 if [ -n "$NOTINSTALLED_MSG" ]; then
-	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"not found!\n\nInstall arp-scan,curlftpfs and nc\n Using\n\n 'sudo dnf install arp-scan curlftpfs netcat' (Fedora/RedHat)\n\n'sudo apt install arp-scan curlftpfs netcat' UBUNTU/Debian"
+	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"not found!\n\nInstall arp-scan,curlftpfs,nc and nmap\n Using\n\n 'sudo dnf install arp-scan curlftpfs netcat nmap' (Fedora/RedHat)\n\n'sudo apt install arp-scan curlftpfs netcat nmap' UBUNTU/Debian"
  
 	zenity	--error --no-wrap \
 	--title="Missing Dependancies" \
