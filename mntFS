@@ -1,11 +1,12 @@
 #!/bin/sh
 
-PROTO=`zenity --list --radiolist --width 400 --height=190\
+PROTO=`zenity --list --radiolist --width 400 --height=300\
   	--title="Choose the File Server type" \
   	--column="sel" --column="Protocol" --column="Description" \
     	TRUE SMB "SAMBA/Windows/SMB/CIFS" \
     	FALSE NFS "Network File System" \
-    	FALSE FTP "File Transfer Protocol"
+    	FALSE FTP "File Transfer Protocol" \
+	FALSE SSH "Secure Shell"
 `
 case $? in
          0)     echo "$PROTO selected.";;
