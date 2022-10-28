@@ -101,6 +101,8 @@ echo '_PASSWORD="'"$_PASSWORD"'"	# Password for the Above FTP Server User' >>$_P
 echo '_MOUNT_POINT="'"$_MOUNT_POINT"'"	# Base folder for mounting (/media recommended but could be /mnt or other choice)' >>$_PNAME.$VAREXTN
 echo "">>$_PNAME.$VAREXTN
 echo "#-- Created `date` by `whoami` ----">>$_PNAME.$VAREXTN
+chown --reference $_PNAME $_PNAME.$VAREXTN		# Give ownership to the caller
+
 } # NOTE : The user name is not saved (commented out) to enable the hostname to be set next time around. Uncomment the line in the .ini file if a specific user name is required
 
 #-------------END save-vars-----------
@@ -128,11 +130,16 @@ function show-progress() {
 #------------ do-exit ------------------
 function do-exit () {
 
-		zenity --warning --no-wrap --width=250 --timeout=$TIMEOUTDELAY\
-			--title="Restart" \
-			--text="<span foreground='red'><big><big><b>Exiting</b></big></big></span><span><b>\n\nResart for changes to take effect</b></span>"
-		exit				# Shutdown -- Go no further
+	zenity --warning --no-wrap --width=250 --timeout=1\
+		--title="Restart" \
+		--text="<span foreground='red'><big><big><b>Restarting</b></big></big></span><span><b>\n\nResart for changes to take effect</b></span>"
+
+	_UID=$(echo $_UID|tr ',' ' ')		# Replace the comma with a space (as was passed originally)
+	exec "$_MY_PNAME" "$_UID" "$_PNAME"	# Restart the script with new possible changes in the files
+
+#		exit				# Shutdown -- Go no further
 }
+# ---------- END do-exit -----------------
 # ---------- umount and trap any error message
 
 function unmount() {
@@ -295,6 +302,7 @@ if [ $DOsave = "Y" ]; then
 	|sort -u \
 	)
 	echo "$_FILE_OUT"| sed -e '/^$/d' >$_FILE	# Save any valid input to $_FILE ignoring blanks
+	chown --reference $_PNAME $_FILE		# Give ownership to the caller
 fi
 }
 # ------------ END edit-subnets ---------
@@ -311,8 +319,8 @@ function edit-servers() {
 		|sort -u -t "," -k1,1 \
 		)				# grep extracts only Valid IP addresses and discards invalid
 
-	echo "$_FILE_OUT"| sed -e '/^$/d' >$_FILE	# Save any valid input to $_FILE ignoring blanks
-
+		echo "$_FILE_OUT"| sed -e '/^$/d' >$_FILE	# Save valid input to $_FILE ignoring blanks
+		chown --reference $_PNAME $_FILE		# Give ownership to the caller
 	fi
 }
 # ------------ END edit-servers ---------
@@ -406,7 +414,7 @@ do
  				fi
 				_NEW_SERVERS=$(echo -e "$_SERVERS_FILE\n$_SUBNET_IPS"|sort -u -t "," -k1,1) # remove any duplicates				
 				echo "$_NEW_SERVERS"|sed -e '/^$/d'|sort -u -t "," -k1,1 > $_PNAME.servers	# Append IPS found to Servers for later processing, Ignore blank lines
-	
+				chown --reference $_PNAME $_PNAME.servers	# Give ownership to the caller
 			fi
 		fi
 	else
@@ -437,6 +445,7 @@ if [ -f $_PNAME.subnets ]; then
 fi
 
 echo -e "$_SUBNET\n$_CURRENT_SUBNETS" > $_PNAME.subnets 	# recreate .subnets Add this subnet at the top
+chown --reference $_PNAME $_PNAME.subnets			# Give ownership to the caller
 
 # Find the available Servers on the subnets
 	show-progress "Initializing" "Finding Servers on $_SUBNET" \
@@ -465,7 +474,7 @@ echo -e "$_SUBNET\n$_CURRENT_SUBNETS" > $_PNAME.subnets 	# recreate .subnets Add
 
 		if [ $? = "0" ]; then
 			_TMP=$(nc -zw1 $S_IP $NC_PORT 2>&1)
-			if [ $? = "0" ]				# if nc connected sucessfully add this IP as an FTP server
+			if [ $? = "0" ]		# if nc connected sucessfully add this IP as an FTP server
 			then
 			_SERVERS=$(echo -e "$S_IP\n$_SERVERS")
 
@@ -604,6 +613,7 @@ if [ ! -z $_PNAME ] ; then
 	MOUNT_POINT_ROOT=$_MOUNT_POINT"/$_PNAME"	# Append the calling name if set as $2
 	if [ ! -d $MOUNT_POINT_ROOT ]; then
 		mkdir $MOUNT_POINT_ROOT				# make the mountpoint directory if required.
+		chown --reference $_PNAME $MOUNT_POINT_ROOT	# Give ownership to the caller
 	fi
 fi
 }
@@ -678,6 +688,7 @@ fi
 # Since we have to run this scipt using sudo we need the actual user UID. This is set by the execution script that called us
 # The UID is passed as $arg1 i.e "./mntFTP $_ID" (see the mntFTP script) comes as 'uid=nnnn gid=nnnn'
 # We need to use awk to add the commas into it to use as input to mount
+_MY_PNAME=$0						# Get our name for restart later
 _UID=$(awk 'BEGIN{FS=" ";OFS=""} {print $1,",",$2 ;} '  <<<$1)
 _PNAME=$2						# Get the actual name of the calling user/script
 #
@@ -929,10 +940,14 @@ else		# Not yet mounted so Proceed to attempt mounting
 		if [ "$MOUNT_POINT" != "$MOUNT_POINT_ROOT" ]; then			# Dont try to create the mount root if mount point is not set correcly
 			if [ ! -d $MOUNT_POINT ]; then
 				mkdir $MOUNT_POINT		# make the mountpoint directory if required.
+				chown --reference $_PNAME $MOUNT_POINT	# Give ownership to the caller
 			fi
 		fi
 # ---------- mount and trap any error message
 		MNT_CMD="curlftpfs '$_IP' '$MOUNT_POINT' -o user=$_USER:$_PASSWORD,$_UID,allow_other"
+echo ..
+echo $MNT_CMD
+echo ..
 		show-progress "Mounting" "Attempting to mount $_IP" "$MNT_CMD"
 
 		ERR=$(echo "$SP_RTN" | grep -v "Created symlink")	# Read any error message
