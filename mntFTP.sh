@@ -33,7 +33,7 @@
 #------ Edit these four DEFAULT options to match your system. Alternatinvely create the $0.ini file and edit that instead and save the .ini file for next time
 _IP="10.0.1.200"					# e.g. "192.168.1.100"
 _USER="`hostname`"					# The User id ON THE FTP Server .. else Guest/anonymous (defaults to the currect hostname)
-_PASSWORD="88888888"					# Password for the Above FTP Server User, prefix special characters, e.g.
+_PASSWORD=""					# Password for the Above FTP Server User, prefix special characters, e.g.
 
 #------
 _MOUNT_POINT=/media					# Base folder for mounting (/media recommended but could be /mnt or other choice)
@@ -91,6 +91,8 @@ else
 	VAREXTN="$1"					# Take the extension from the arguments
 fi
 
+password-crypt "$_PASSWORD"				# Encrypt the password
+
 echo "# This file contains the variables to match your system and is included into the main script at runtime">$_PNAME.$VAREXTN	# create the file
 echo "# if this file does not exist you will get the option to create it from the defaults in the main script">>$_PNAME.$VAREXTN
 echo "">>$_PNAME.$VAREXTN
@@ -102,6 +104,8 @@ echo '_MOUNT_POINT="'"$_MOUNT_POINT"'"	# Base folder for mounting (/media recomm
 echo "">>$_PNAME.$VAREXTN
 echo "#-- Created `date` by `whoami` ----">>$_PNAME.$VAREXTN
 chown --reference $_PNAME $_PNAME.$VAREXTN		# Give ownership to the caller
+
+password-crypt "$_PASSWORD" -d				# Decrypt the password again
 
 } # NOTE : The user name is not saved (commented out) to enable the hostname to be set next time around. Uncomment the line in the .ini file if a specific user name is required
 
@@ -618,6 +622,16 @@ if [ ! -z $_PNAME ] ; then
 fi
 }
 #---------- END select-mountpoint --------
+# --------- password-crypt ---------------
+# Encrypt/Decrypt _PASSWORD
+# Entry $1 is the string to crypt/Decrypt, $2 is -d (to DEcrypt if $2 is blank the ENcrypt
+function password-crypt ()
+{
+	if [ -n "$1" ]; then				# if we got a string to work on
+		_PASSWORD=$(echo "$1" | openssl enc -pbkdf2 -a $2 )
+	fi
+}
+# --------- END password-crypt -----------
 
 export -f select-mounted select-server find-ftp-servers select-mountpoint
 
@@ -699,6 +713,8 @@ fi
 if [ -f $_PNAME.last ]; then						
 	. $_PNAME.last				# load last sucessful mounted options if they exist (Overwrites .ini)
 fi
+
+password-crypt "$_PASSWORD" -d			# Decrypt the password
 
 select-mountpoint					# Decide where we are going to mount
 
