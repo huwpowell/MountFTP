@@ -99,7 +99,8 @@ echo "">>$_PNAME.$VAREXTN
 
 echo '_IP="'"$_IP"'"		# e.g. 192.168.1.100' >>$_PNAME.$VAREXTN
 echo '_USER="'"$_USER"'"		# The User id ON THE FTP server' >>$_PNAME.$VAREXTN
-echo '_PASSWORD="'"$_PASSWORD"'"	# Password for the Above FTP Server User' >>$_PNAME.$VAREXTN
+echo '_PASSWORD="'"$_PASSWORD"'"	# Encrypted Password for the Above FTP Server User' >>$_PNAME.$VAREXTN
+echo '# You can delete the password but do not alter it otherwise the script will fail to mount anything' >>$_PNAME.$VAREXTN
 echo '_MOUNT_POINT="'"$_MOUNT_POINT"'"	# Base folder for mounting (/media recommended but could be /mnt or other choice)' >>$_PNAME.$VAREXTN
 echo "">>$_PNAME.$VAREXTN
 echo "#-- Created `date` by `whoami` ----">>$_PNAME.$VAREXTN
@@ -646,6 +647,7 @@ export -f select-mounted select-server find-ftp-servers select-mountpoint
 # 2. curlftpfs to mount FTP volumes
 # 3. nc to interact with FTP
 # 4. nmap to scan other subnets
+# 5. openssl for password encryption
 # 5. yad to give functional and usable dialog inputs
 
 NOTINSTALLED_MSG=""						# Start with a blank message
@@ -675,7 +677,13 @@ if [ $? != "0" ]; then
        	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"nmap\n"		# indicate not installed		
 fi
 
-#5.. Look for yad
+#5.. Look for openssl
+which openssl >>/dev/null 2>&1					# see if openssl is installed
+if [ $? != "0" ]; then
+       	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"openssl\n"		# indicate not installed		
+fi
+
+#6.. Look for yad
 
 which yad >>/dev/null 2>&1					# see if yad is installed
 if [ $? != "0" ]; then
@@ -688,7 +696,7 @@ if [ $? != "0" ]; then
 fi
 
 if [ -n "$NOTINSTALLED_MSG" ]; then
-	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"not found!\n\nInstall arp-scan,curlftpfs,nc and nmap\n Using\n\n 'sudo dnf install arp-scan curlftpfs netcat nmap' (Fedora/RedHat)\n\n'sudo apt install arp-scan curlftpfs netcat nmap' UBUNTU/Debian"
+	NOTINSTALLED_MSG=$NOTINSTALLED_MSG"not found!\n\nInstall arp-scan,curlftpfs,nc and nmap\n Using\n\n 'sudo dnf install arp-scan curlftpfs netcat nmap openssl' (Fedora/RedHat)\n\n'sudo apt install arp-scan curlftpfs netcat nmap openssl' UBUNTU/Debian"
  
 	zenity	--error --no-wrap \
 	--title="Missing Dependancies" \
