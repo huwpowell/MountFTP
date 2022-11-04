@@ -349,7 +349,7 @@ do
 		fi
 		SCAN_SUBNETS=$(awk 'BEGIN{FS="\n";OFS=""} {print "FALSE\n",$1 ;} '<<<$SCAN_SUBNETS)
 
-		OUT=$(yad --list --geometry=500x500 --separator="|" --on-top --close-on-unfocus --skip-taskbar --align=right --text-align=center --buttons-layout=spread --borders=25 \
+		OUT=$(yad --list --geometry=500x700 --separator="|" --on-top --close-on-unfocus --skip-taskbar --align=right --text-align=center --buttons-layout=spread --borders=25 \
 			--window-icon $YAD_ICON --image $YAD_ICON \
 			--checklist \
 			--multiple \
@@ -409,8 +409,8 @@ do
 
 			if [ -n "$_SUBNET_SERVERS" ]; then
 
-				_SUBNET_IPS=$(echo "$_SUBNET_SERVERS" \
-				|awk -v sname="Remote Scanned" 'BEGIN{FS=" ";OFS=""} {print $1,",",sname,"\n" ;} ' \
+				_SUBNET_IPS=$(echo -e "$_SUBNET_SERVERS" \
+				|awk -v sname="Remote Scanned" 'BEGIN{FS=" ";OFS=""} {print $1,",",sname;} ' \
 				)
 
 				_SERVERS_FILE=""
@@ -485,8 +485,8 @@ chown --reference $_PNAME $_PNAME.subnets			# Give ownership to the caller
 
 			fi
 				
-			else
-				SP_RTN=""				# Show nothing found
+		else
+			SP_RTN=""				# Show nothing found
 		fi
 
 	done> >(zenity --progress --pulsate  --width=250 --auto-close --no-cancel \
@@ -521,8 +521,8 @@ function select-server() {
 		set-netbiosname $S_IP							# Get the netbios name into _NETBIOSNAME
 
 #....
-		CHECK_SRV=""							# Start with a blank list
-		if [ -n "$_SERVERS_AND_NAMES" ]; then			# if we found any servers
+		CHECK_SRV=""								# Start with a blank list
+		if [ -n "$_SERVERS_AND_NAMES" ]; then					# if we found any servers
 			CHECK_SRV=$(echo "$_SERVERS_AND_NAMES" \
 			| grep -iwv $_IP \
 			| sed -e '/^$/d' \
