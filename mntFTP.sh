@@ -17,7 +17,7 @@
 # Version 3, enhanced for Ubuntu 13.X+, Fedora 35+, and similar distros.
 # Runs on all GNU/Linux distros (install cifs-utils)
 
-# Version 4, Crafted a mod for FC32+ and added some visible interactions using zenity/yad ..Else silent) HHP 20200509
+# Version 4, Crafted a mod for FC32+ and added some visible interactions using zenity/yad ..Else silent)
 # Added the use of zenity/yad to produce dialog in Gnome
 # version 5, Modified to use FTP intead of original SMB/NFS
 # Cloned from mntNFS and modifed for FTP
@@ -33,18 +33,17 @@
 #------ Edit these four DEFAULT options to match your system. Alternatinvely create the $0.ini file and edit that instead and save the .ini file for next time
 _IP="10.0.1.200"					# e.g. "192.168.1.100"
 _USER="`hostname`"					# The User id ON THE FTP Server .. else Guest/anonymous (defaults to the currect hostname)
-_PASSWORD=""					# Password for the Above FTP Server User, prefix special characters, e.g.
-
+_PASSWORD=""						# Password for the Above FTP Server User
 #------
-_MOUNT_POINT_ROOT=/media					# Base folder for mounting (/media recommended but could be /mnt or other choice)
+_MOUNT_POINT_ROOT=/media			# Base folder for mounting (/media recommended but could be /mnt or other choice)
 
-NC_PORT=21						# Which port to use to connect during scanning
 TIMEOUTDELAY=5						# timeout for dialogs and messages. (in seconds)
 YADTIMEOUTDELAY=$(($TIMEOUTDELAY*4))			# Extra time for completing the initial form and where necessary
 
 ######## !! DON'T MODIFY ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING !!!!!!! ##########
 ######## !! DON'T MODIFY ANYTHING BELOW THIS LINE UNLESS YOU KNOW WHAT YOU ARE DOING !!!!!!! ##########
 #
+NC_PORT=21						# Which port to use to connect during scanning
 #------------- Functions --------
 
 #------ yad test -------------- Not used in this script.. It is Just a testbed
@@ -636,7 +635,7 @@ fi
 #---------- END select-mountpoint --------
 # --------- password-crypt ---------------
 # Encrypt/Decrypt _PASSWORD
-# Entry $1 is the string to crypt/Decrypt, $2 is -d (to DEcrypt if $2 is blank the ENcrypt
+# Entry $1 is the string to crypt/Decrypt, $2 is -d (to DEcrypt if $2 is blank then ENcrypt
 function password-crypt ()
 {
 	if [ -n "$1" ]; then				# if we got a string to work on
@@ -848,10 +847,10 @@ do
 	ENTRYerr=""					# Collect the blank field names 
 	if [ -z "$t_IP" ]; then ENTRYerr="$ENTRYerr IP,"
 	fi
-	if [ -z "$t_USER" ]; then ENTRYerr="$ENTRYerr User ID,"
-	fi
-	if [ -z "$t_PASSWORD" ]; then ENTRYerr="$ENTRYerr Password,"
-	fi
+#	if [ -z "$t_USER" ]; then ENTRYerr="$ENTRYerr User ID,"
+#	fi
+#	if [ -z "$t_PASSWORD" ]; then ENTRYerr="$ENTRYerr Password,"
+#	fi
 	if [ -z "$ENTRYerr" ]; then				# no fields are blank
 
 		if [[ "$_IP" != "$t_IP" ]] || \
@@ -978,7 +977,12 @@ else		# Not yet mounted so Proceed to attempt mounting
 			fi
 		fi
 # ---------- mount and trap any error message
-		MNT_CMD="curlftpfs '$_IP' '$MOUNT_POINT' -o user=$_USER:$_PASSWORD,$_UID,allow_other"
+		MNT_CMD="curlftpfs '$_IP' '$MOUNT_POINT' -o $_UID,allow_other"	# set the mount command line
+
+		if [ -n "$_USER" ]; then MNT_CMD="$MNT_CMD,user=$_USER"		# Add the username is set
+			if [ -n "$_PASSWORD" ]; then MNT_CMD="$MNT_CMD:$_PASSWORD"	# and the Password if set
+			fi
+		fi
 echo ..
 echo $MNT_CMD
 echo ..
@@ -986,7 +990,7 @@ echo ..
 
 		ERR=$(echo "$SP_RTN" | grep -v "Created symlink")	# Read any error message
 									# The "Created symlink" message comes up the first time
-									# That we run but the mount suceeds, So ignore it
+									# that we run but the mount suceeds, So ignore it
 
 # --- end mount (any error message is in $ERR
 
